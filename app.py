@@ -7,9 +7,8 @@ from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "secret_key_here")
 
-# DATABASE_URL should be set in environment variables
-# Example: postgresql://postgres:[password]@db.[id].supabase.co:5432/postgres
-DATABASE_URL = os.environ.get("DATABASE_URL")
+# PASTE YOUR SUPABASE URI BELOW (Replace the placeholder)
+DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:[YOUR-PASSWORD]@db.nvpzfrrwmtacrkebozsy.supabase.co:5432/postgres")
 
 def get_db_connection():
     if not DATABASE_URL:
