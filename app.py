@@ -1,20 +1,26 @@
 from flask import Flask, render_template, request, redirect, session, url_for
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import os
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "secret_key_here")
 
-DB_NAME = 'labms.db'
+# DATABASE_URL should be set in environment variables
+# Example: postgresql://postgres:[password]@db.[id].supabase.co:5432/postgres
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 def get_db_connection():
+    if not DATABASE_URL:
+        print("DATABASE_URL not set!")
+        return None
     try:
-        conn = sqlite3.connect(DB_NAME)
-        conn.row_factory = sqlite3.Row  # This allows us to access columns by name
+        # Connect to Supabase/PostgreSQL
+        conn = psycopg2.connect(DATABASE_URL)
         return conn
-    except sqlite3.Error as err:
-        print(f"Error: {err}")
+    except Exception as err:
+        print(f"Error connecting to database: {err}")
         return None
 
 @app.route("/", methods=["GET", "POST"])
@@ -29,11 +35,13 @@ def login():
 
         conn = get_db_connection()
         if not conn:
-            return "Database connection failed. Please run setup_sqlite.py first."
+            return "Database connection failed. Please ensure DATABASE_URL is set."
             
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        # RealDictCursor allows accessing columns by name
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute("SELECT * FROM users WHERE username = %s", (username,))
         user = cursor.fetchone()
+        cursor.close()
         conn.close()
 
         if not user:
@@ -60,18 +68,18 @@ def home():
     if session.get("role") == "admin":
         conn = get_db_connection()
         if conn:
-            cursor = conn.cursor()
-            # Fetch data from the last 3 hours
-            # SQLite stores TIMESTAMP in UTC by default if using CURRENT_TIMESTAMP
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            # Fetch data from the last 3 hours using PostgreSQL syntax
             query = """
                 SELECT lu.*, u.username 
                 FROM lab_usage lu
                 JOIN users u ON lu.user_id = u.id
-                WHERE lu.updated_at >= DATETIME('now', '-3 hours')
+                WHERE lu.updated_at > NOW() - INTERVAL '3 hours'
                 ORDER BY lu.updated_at DESC
             """
             cursor.execute(query)
             data = cursor.fetchall()
+            cursor.close()
             conn.close()
 
     return render_template("home.html", message=message, data=data)
@@ -102,26 +110,30 @@ def save_update():
     
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO lab_usage (user_id, lab_name, staff_name, class, department) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO lab_usage (user_id, lab_name, staff_name, class, department) VALUES (%s, %s, %s, %s, %s)",
         (session["user_id"], lab_name, staff_name, student_class, department)
     )
     conn.commit()
+    cursor.close()
     conn.close()
 
     return redirect(url_for("home", message="✅ Updated successfully!"))
 
 @app.route("/logout")
 def logout():
-    # Reset all data on logout (as per user's earlier requirement)
+    # Reset all data on logout
     conn = get_db_connection()
     if conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM lab_usage")
         conn.commit()
+        cursor.close()
         conn.close()
         
     session.clear()
     return redirect(url_for("login"))
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Use port from environment variable for deployment
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
