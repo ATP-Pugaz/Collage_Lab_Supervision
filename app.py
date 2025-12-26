@@ -1,26 +1,19 @@
 from flask import Flask, render_template, request, redirect, session, url_for
-import mysql.connector
-from datetime import datetime, timedelta
-
+import sqlite3
 import os
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "secret_key_here")
 
-# Database configuration - prioritize environment variables for deployment
-db_config = {
-    "host": os.environ.get("MYSQLHOST", "localhost"),
-    "user": os.environ.get("MYSQLUSER", "root"),
-    "password": os.environ.get("MYSQLPASSWORD", "Pugaz2006@atp"),
-    "database": os.environ.get("MYSQLDATABASE", "labms"),
-    "port": int(os.environ.get("MYSQLPORT", 3306))
-}
+DB_NAME = 'labms.db'
 
 def get_db_connection():
     try:
-        conn = mysql.connector.connect(**db_config)
+        conn = sqlite3.connect(DB_NAME)
+        conn.row_factory = sqlite3.Row  # This allows us to access columns by name
         return conn
-    except mysql.connector.Error as err:
+    except sqlite3.Error as err:
         print(f"Error: {err}")
         return None
 
@@ -36,12 +29,11 @@ def login():
 
         conn = get_db_connection()
         if not conn:
-            return "Database connection failed. Please ensure MySQL is running."
+            return "Database connection failed. Please run setup_sqlite.py first."
             
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM users WHERE username=%s", (username,))
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
         user = cursor.fetchone()
-        cursor.close()
         conn.close()
 
         if not user:
@@ -51,7 +43,7 @@ def login():
         else:
             session["user_id"] = user["id"]
             session["username"] = user["username"]
-            session["role"] = user["role"] # Store role in session
+            session["role"] = user["role"]
             return redirect(url_for("home"))
 
     return render_template("login.html", error=error)
@@ -68,18 +60,18 @@ def home():
     if session.get("role") == "admin":
         conn = get_db_connection()
         if conn:
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor()
             # Fetch data from the last 3 hours
+            # SQLite stores TIMESTAMP in UTC by default if using CURRENT_TIMESTAMP
             query = """
                 SELECT lu.*, u.username 
                 FROM lab_usage lu
                 JOIN users u ON lu.user_id = u.id
-                WHERE lu.updated_at > NOW() - INTERVAL 3 HOUR 
+                WHERE lu.updated_at >= DATETIME('now', '-3 hours')
                 ORDER BY lu.updated_at DESC
             """
             cursor.execute(query)
             data = cursor.fetchall()
-            cursor.close()
             conn.close()
 
     return render_template("home.html", message=message, data=data)
@@ -110,24 +102,22 @@ def save_update():
     
     cursor = conn.cursor()
     cursor.execute(
-        "INSERT INTO lab_usage (user_id, lab_name, staff_name, class, department) VALUES (%s, %s, %s, %s, %s)",
+        "INSERT INTO lab_usage (user_id, lab_name, staff_name, class, department) VALUES (?, ?, ?, ?, ?)",
         (session["user_id"], lab_name, staff_name, student_class, department)
     )
     conn.commit()
-    cursor.close()
     conn.close()
 
     return redirect(url_for("home", message="✅ Updated successfully!"))
 
 @app.route("/logout")
 def logout():
-    # Reset all data on logout
+    # Reset all data on logout (as per user's earlier requirement)
     conn = get_db_connection()
     if conn:
         cursor = conn.cursor()
         cursor.execute("DELETE FROM lab_usage")
         conn.commit()
-        cursor.close()
         conn.close()
         
     session.clear()
