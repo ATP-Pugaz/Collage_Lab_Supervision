@@ -2,15 +2,18 @@ from flask import Flask, render_template, request, redirect, session, url_for
 import mysql.connector
 from datetime import datetime, timedelta
 
-app = Flask(__name__)
-app.secret_key = "secret_key_here"
+import os
 
-# Database configuration
+app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "secret_key_here")
+
+# Database configuration - prioritize environment variables for deployment
 db_config = {
-    "host": "localhost",
-    "user": "root",
-    "password": "Pugaz2006@atp",  # Change to your MySQL password
-    "database": "labms"
+    "host": os.environ.get("MYSQLHOST", "localhost"),
+    "user": os.environ.get("MYSQLUSER", "root"),
+    "password": os.environ.get("MYSQLPASSWORD", "Pugaz2006@atp"),
+    "database": os.environ.get("MYSQLDATABASE", "labms"),
+    "port": int(os.environ.get("MYSQLPORT", 3306))
 }
 
 def get_db_connection():

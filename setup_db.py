@@ -1,13 +1,18 @@
 import mysql.connector
 from mysql.connector import errorcode
 
+import os
+
+# Database configuration
 db_config = {
-    "host": "localhost",
-    "user": "root",
-    "password": "Pugaz2006@atp"
+    "host": os.environ.get("MYSQLHOST", "localhost"),
+    "user": os.environ.get("MYSQLUSER", "root"),
+    "password": os.environ.get("MYSQLPASSWORD", "Pugaz2006@atp"),
+    "database": os.environ.get("MYSQLDATABASE", "labms"),
+    "port": int(os.environ.get("MYSQLPORT", 3306))
 }
 
-DB_NAME = 'labms'
+DB_NAME = db_config["database"]
 
 TABLES = {}
 TABLES['users'] = (
