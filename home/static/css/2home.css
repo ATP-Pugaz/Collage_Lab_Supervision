@@ -1,0 +1,57 @@
+* {
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #0a0a0a;
+
+}
+
+.Head {
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
+
+hr {
+    border: 0;
+    border-top: 2px solid #1b9cc7;
+}
+
+.lab {
+    background-color: #0ec7ab;
+    width: 30%;
+    margin: auto;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+}
+
+.Lab-1,
+.Lab-2,
+.Lab-3 {
+    background-color: rgb(8, 120, 211);
+    border: 3px solid #b12e2e;
+    margin: 10px;
+    padding: 15px;
+    text-align: center;
+    border-radius: 10px;
+}
+
+
+.btn {
+    background-color: #a8a2a2;
+    padding: 10px;
+    border-radius: 7px;
+    border: 3px solid #b12e2e;
+    margin: 10px;
+}
+
+.btn:hover {
+
+    cursor: pointer;
+
+}

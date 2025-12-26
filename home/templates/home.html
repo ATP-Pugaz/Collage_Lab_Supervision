@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Supervision - Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/2home.css') }}">
+    <style>
+        .logout-link {
+            color: white;
+            float: right;
+            margin-right: 20px;
+            text-decoration: none;
+            background-color: #b12e2e;
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .logout-link:hover {
+            background-color: #d13e3e;
+        }
+
+        .admin-table {
+            width: 80%;
+            margin: 30px auto;
+            border-collapse: collapse;
+            background-color: #1a1a1a;
+            color: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        .admin-table th {
+            background-color: #1b9cc7;
+        }
+
+        .admin-section {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="Head">
+        <a href="{{ url_for('logout') }}" class="logout-link">Logout & Reset</a>
+        <h1>Lab Supervision</h1>
+        <hr>
+        {% if message %}
+        <p style="color: #0ec7ab; font-weight: bold; margin-top: 10px;">{{ message }}</p>
+        {% endif %}
+    </div>
+
+    <div class="lab">
+        <div class="Lab-1">
+            <h2>NBSF-11</h2>
+            {% if session['role'] == 'user' %}
+            <button class="btn" onclick="navigateTo('NBSF-11')">Click to Supervise</button>
+            {% else %}
+            <p style="color: #ddd;">Admin View</p>
+            {% endif %}
+        </div>
+
+        <div class="Lab-2">
+            <h2>NBSF-12</h2>
+            {% if session['role'] == 'user' %}
+            <button class="btn" onclick="navigateTo('NBSF-12')">Click to Supervise</button>
+            {% else %}
+            <p style="color: #ddd;">Admin View</p>
+            {% endif %}
+        </div>
+
+        <div class="Lab-3">
+            <h2>NBSF-13</h2>
+            {% if session['role'] == 'user' %}
+            <button class="btn" onclick="navigateTo('NBSF-13')">Click to Supervise</button>
+            {% else %}
+            <p style="color: #ddd;">Admin View</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if session['role'] == 'admin' %}
+    <div class="admin-section">
+        <hr>
+        <h2>Current Lab Supervision Status</h2>
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Lab</th>
+                    <th>Staff</th>
+                    <th>Class</th>
+                    <th>Dept</th>
+                    <th>Updated At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr>
+                    <td>{{ row.lab_name }}</td>
+                    <td>{{ row.staff_name }}</td>
+                    <td>{{ row.class }}</td>
+                    <td>{{ row.department }}</td>
+                    <td>{{ row.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align: center;">No active supervisions found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+    <script>
+        function navigateTo(labName) {
+            window.location.href = "/staff_update/" + encodeURIComponent(labName);
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+
+</html>

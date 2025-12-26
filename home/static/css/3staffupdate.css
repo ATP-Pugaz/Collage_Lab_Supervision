@@ -1,0 +1,37 @@
+* {
+
+    background-color: #0a0a0a;
+}
+
+h2 {
+    color: white;
+    text-align: center;
+    padding: 20px;
+    font-family: arial, sans-serif;
+    
+}
+
+hr {
+    border: 0;
+    border-top: 2px solid #1b9cc7;
+}
+
+select,
+input {
+    background-color: antiquewhite;
+    margin: auto;
+}
+
+label,
+option {
+    background: transparent;
+    font-family: 'Lucida Sans';
+}
+
+form {
+    text-align: center;
+    margin: auto;
+    padding: 20px;
+    width: 35%;
+    background: linear-gradient(to bottom, #5e67eb, aqua, #5eaceb);
+}
