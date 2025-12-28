@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
+    password VARCHAR(16) NOT NULL,
     role VARCHAR(10) CHECK (role IN ('user', 'admin')) DEFAULT 'user'
 );
 

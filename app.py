@@ -1,25 +1,41 @@
 from flask import Flask, render_template, request, redirect, session, url_for
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from dotenv import load_dotenv
 import os
-from datetime import datetime, timedelta
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "secret_key_here")
 
-# PASTE YOUR SUPABASE URI BELOW (Replace the placeholder)
-DATABASE_URL = os.environ.get("DATABASE_URL", "postgresql://postgres:[YOUR-PASSWORD]@db.nvpzfrrwmtacrkebozsy.supabase.co:5432/postgres")
+# Database configuration
+DATABASE_URL = os.environ.get("DATABASE_URL")
+# If DATABASE_URL is not set, we use these individual parts
+DB_HOST = os.environ.get("DB_HOST", "db.ukbhasmjqnqoxqthhtvh.supabase.co")
+DB_NAME = os.environ.get("DB_NAME", "postgres")
+DB_USER = os.environ.get("DB_USER", "postgres")
+DB_PASS = os.environ.get("DB_PASS", "Pugaz2006@atp")
+DB_PORT = os.environ.get("DB_PORT", "5432")
 
 def get_db_connection():
-    if not DATABASE_URL:
-        print("DATABASE_URL not set!")
-        return None
     try:
-        # Connect to Supabase/PostgreSQL
-        conn = psycopg2.connect(DATABASE_URL)
-        return conn
+        # Option 1: Use full DATABASE_URL (Best for Vercel/Railway)
+        if DATABASE_URL:
+            return psycopg2.connect(postgresql://postgres:[Pugaz2006@atp]@db.ukbhasmjqnqoxqthhtvh.supabase.co:5432/postgres)
+        
+        # Option 2: Use individual parameters (Best for local testing)
+        # Note: Replace YOUR_ACTUAL_PASSWORD_HERE with your real Supabase password
+        return psycopg2.connect(
+            host=DB_HOST,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASS,
+            port=DB_PORT
+        )
     except Exception as err:
-        print(f"Error connecting to database: {err}")
+        print(f"Database Connection Error: {err}")
         return None
 
 @app.route("/", methods=["GET", "POST"])
@@ -34,7 +50,7 @@ def login():
 
         conn = get_db_connection()
         if not conn:
-            return "Database connection failed. Please ensure DATABASE_URL is set."
+            return "❌ Database connection failed! Please check your credentials in app.py (Line 18) or .env file."
             
         # RealDictCursor allows accessing columns by name
         cursor = conn.cursor(cursor_factory=RealDictCursor)
